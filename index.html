@@ -169,11 +169,9 @@
     </div>
 
     <script type="module">
-        // Import Firebase
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref, push } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAe0PI9x-7QcLMjX4k1eW6JC18vpU61g88",
             authDomain: "visitor-tracker-73231.firebaseapp.com",
@@ -184,16 +182,9 @@
             appId: "1:594221101071:web:7e6f419f303dc2083ef37a"
         };
 
-        // Initialize Firebase
-        let db;
-        try {
-            const app = initializeApp(firebaseConfig);
-            db = getDatabase(app);
-        } catch (error) {
-            console.error("Firebase initialization error:", error);
-        }
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-        // Function to detect device type
         function getDeviceType() {
             const ua = navigator.userAgent;
             if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
@@ -205,7 +196,6 @@
             return "Desktop";
         }
 
-        // Function to detect OS
         function getOS() {
             const ua = navigator.userAgent;
             if (ua.indexOf("Win") !== -1) return "Windows";
@@ -216,7 +206,6 @@
             return "Unknown";
         }
 
-        // Function to detect browser
         function getBrowser() {
             const ua = navigator.userAgent;
             if (ua.indexOf("Firefox") > -1) return "Firefox";
@@ -230,7 +219,6 @@
             return "Unknown";
         }
 
-        // Collect visitor data
         const visitorData = {
             device: getDeviceType(),
             os: getOS(),
@@ -242,7 +230,6 @@
             userAgent: navigator.userAgent
         };
 
-        // Display basic info immediately
         document.getElementById('device').textContent = visitorData.device;
         document.getElementById('os').textContent = visitorData.os;
         document.getElementById('browser').textContent = visitorData.browser;
@@ -250,50 +237,55 @@
         document.getElementById('language').textContent = visitorData.language;
         document.getElementById('timezone').textContent = visitorData.timezone;
 
-        // Fetch IP and location info using ip-api.com (no CORS issues)
-        fetch('http://ip-api.com/json/')
+        // Use ipapi.is - a reliable CORS-friendly API
+        fetch('https://api.ipapi.is/')
             .then(response => response.json())
             .then(data => {
-                visitorData.ip = data.query || 'Unknown';
-                visitorData.city = data.city || 'Unknown';
-                visitorData.country = data.country || 'Unknown';
-                visitorData.countryCode = data.countryCode || 'Unknown';
-                visitorData.region = data.regionName || 'Unknown';
-                visitorData.latitude = data.lat || null;
-                visitorData.longitude = data.lon || null;
-                visitorData.isp = data.isp || 'Unknown';
+                visitorData.ip = data.ip || 'Unknown';
+                visitorData.city = data.location?.city || 'Unknown';
+                visitorData.country = data.location?.country || 'Unknown';
+                visitorData.countryCode = data.location?.country_code || 'Unknown';
+                visitorData.region = data.location?.state || 'Unknown';
+                visitorData.latitude = data.location?.latitude || null;
+                visitorData.longitude = data.location?.longitude || null;
+                visitorData.isp = data.company?.name || 'Unknown';
 
                 document.getElementById('ip').textContent = visitorData.ip;
                 document.getElementById('location').textContent = 
                     `${visitorData.city}, ${visitorData.country}`;
                 
-                // Save to Firebase
-                if (db) {
-                    const visitorsRef = ref(db, 'visitors');
-                    push(visitorsRef, visitorData)
-                        .then(() => {
-                            showStatus('Data logged successfully!', 'success');
-                        })
-                        .catch((error) => {
-                            showStatus('Data displayed but logging failed: ' + error.message, 'error');
-                        });
-                }
+                const visitorsRef = ref(db, 'visitors');
+                push(visitorsRef, visitorData)
+                    .then(() => {
+                        showStatus('Data logged successfully!', 'success');
+                    })
+                    .catch((error) => {
+                        showStatus('Data displayed but logging failed: ' + error.message, 'error');
+                    });
                 
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('info').style.display = 'block';
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('IP API Error:', error);
                 visitorData.ip = 'API Error';
                 visitorData.city = 'Unknown';
                 visitorData.country = 'Unknown';
                 
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('info').style.display = 'block';
-                document.getElementById('ip').textContent = 'API Error';
+                document.getElementById('ip').textContent = 'Unable to detect';
                 document.getElementById('location').textContent = 'Unable to fetch';
                 
-                showStatus('Unable to fetch IP information. API might be rate-limited.', 'error');
+                // Still save to Firebase even without IP info
+                const visitorsRef = ref(db, 'visitors');
+                push(visitorsRef, visitorData)
+                    .then(() => {
+                        showStatus('Data logged (without IP info)', 'success');
+                    })
+                    .catch((error) => {
+                        showStatus('Logging failed: ' + error.message, 'error');
+                    });
             });
 
         function showStatus(message, type) {
