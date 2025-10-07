@@ -173,16 +173,15 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref, push } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-        // TODO: Replace with your Firebase config
-        // Get this from Firebase Console -> Project Settings -> Web App
+        // Firebase configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-            projectId: "YOUR_PROJECT",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyAe0PI9x-7QcLMjX4k1eW6JC18vpU61g88",
+            authDomain: "visitor-tracker-73231.firebaseapp.com",
+            databaseURL: "https://visitor-tracker-73231-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "visitor-tracker-73231",
+            storageBucket: "visitor-tracker-73231.firebasestorage.app",
+            messagingSenderId: "594221101071",
+            appId: "1:594221101071:web:7e6f419f303dc2083ef37a"
         };
 
         // Initialize Firebase
@@ -251,18 +250,18 @@
         document.getElementById('language').textContent = visitorData.language;
         document.getElementById('timezone').textContent = visitorData.timezone;
 
-        // Fetch IP and location info
-        fetch('https://ipapi.co/json/')
+        // Fetch IP and location info using ip-api.com (no CORS issues)
+        fetch('http://ip-api.com/json/')
             .then(response => response.json())
             .then(data => {
-                visitorData.ip = data.ip || 'Unknown';
+                visitorData.ip = data.query || 'Unknown';
                 visitorData.city = data.city || 'Unknown';
-                visitorData.country = data.country_name || 'Unknown';
-                visitorData.countryCode = data.country_code || 'Unknown';
-                visitorData.region = data.region || 'Unknown';
-                visitorData.latitude = data.latitude || null;
-                visitorData.longitude = data.longitude || null;
-                visitorData.isp = data.org || 'Unknown';
+                visitorData.country = data.country || 'Unknown';
+                visitorData.countryCode = data.countryCode || 'Unknown';
+                visitorData.region = data.regionName || 'Unknown';
+                visitorData.latitude = data.lat || null;
+                visitorData.longitude = data.lon || null;
+                visitorData.isp = data.isp || 'Unknown';
 
                 document.getElementById('ip').textContent = visitorData.ip;
                 document.getElementById('location').textContent = 
